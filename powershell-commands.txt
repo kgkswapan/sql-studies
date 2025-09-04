@@ -1,0 +1,87 @@
+File system
+	•	Get-ChildItem – list files/dirs: Get-ChildItem C:\Logs -Recurse
+	•	Select-String – grep in files: Select-String -Path C:\Logs\*.log -Pattern 'ERROR|Exception'
+	•	Remove-Item / Copy-Item / Move-Item – file ops: Get-ChildItem C:\Dump\*.dmp | Remove-Item -Force
+	•	New-Item – create file/dir: New-Item -ItemType Directory C:\Archive
+	•	Get/Set-Content – read/write text: Get-Content app.log -Tail 200 -Wait
+	•	Compress-Archive / Expand-Archive – zip/unzip: Compress-Archive C:\Logs C:\logs.zip
+
+Processes & performance
+	•	Get-Process / Stop-Process – list/kill: Get-Process sqlservr | Stop-Process -Force
+	•	Start-Process – launch: Start-Process notepad.exe -ArgumentList 'C:\file.txt'
+	•	Measure-Object – sum/avg: Get-Process | Measure-Object CPU -Sum
+	•	Get-Counter – perf counters: Get-Counter '\Processor(_Total)\% Processor Time'
+
+Services & scheduled tasks
+	•	Get-Service / Restart-Service – status/restart: Get-Service MSSQLSERVER | Restart-Service -Force
+	•	Set-Service – start type: Set-Service -Name W32Time -StartupType Automatic
+	•	Get-ScheduledTask / Start-ScheduledTask – jobs: Start-ScheduledTask -TaskName 'NightlyBatch'
+
+System info & power
+	•	Get-ComputerInfo / Get-CimInstance – system facts: Get-CimInstance Win32_OperatingSystem
+	•	Restart-Computer / Stop-Computer – reboot/shutdown: Restart-Computer -ComputerName APP01 -Force
+	•	Get-HotFix – installed patches: Get-HotFix | Sort-Object InstalledOn -Desc
+
+Event logs & diagnostics
+	•	Get-WinEvent – modern logs: Get-WinEvent -LogName Application -MaxEvents 100
+	•	Get-EventLog – classic logs: Get-EventLog -LogName System -Newest 50
+	•	Wevtutil (native) – export: wevtutil epl Application C:\app.evtx
+
+Networking & connectivity
+	•	Test-NetConnection – ping/port test: Test-NetConnection APP01 -Port 1433
+	•	Resolve-DnsName – DNS: Resolve-DnsName marex.com
+	•	Get-NetTCPConnection – sockets: Get-NetTCPConnection -State Listen
+	•	Invoke-WebRequest / Invoke-RestMethod – HTTP/API: Invoke-RestMethod https://api/status
+
+Remoting (WinRM/SSH)
+	•	Enter-PSSession – interactive remote: Enter-PSSession APP01
+	•	Invoke-Command – run cmd remotely: Invoke-Command APP01 -ScriptBlock { Get-Service MSSQLSERVER }
+	•	Enable-PSRemoting – setup on target (admin, once): Enable-PSRemoting -Force
+	•	New-PSSession – reusable session: $s=New-PSSession APP01; Invoke-Command -Session $s -ScriptBlock {...}
+
+Security, creds, ACL
+	•	Get-Credential – prompt creds: $cred = Get-Credential
+	•	ConvertTo-SecureString / PSCredential:
+        $sec = ConvertTo-SecureString 'P@ss' -AsPlainText -Force
+        $cred = [pscredential]::new('DOMAIN\User',$sec)
+    *   Get-Acl / Set-Acl – file permissions:
+Get-Acl C:\Data | Format-List
+	•	Get-LocalUser / Get-LocalGroupMember – local accounts.
+
+Registry (common in prod support)
+	•	Get-ItemProperty / Set-ItemProperty – read/write keys:
+Get-ItemProperty 'HKLM:\Software\Vendor\App'
+
+Data (CSV/JSON/XML) – handy for reports & automation
+	•	Import/Export-Csv – tabular I/O:
+Get-Service | Select Name,Status | Export-Csv svc.csv -NoTypeInformation
+	•	ConvertTo/From-Json – JSON:
+Invoke-RestMethod ... | ConvertTo-Json -Depth 5
+	•	Out-GridView – quick GUI filter (desktop): Get-Process | Out-GridView
+
+Modules & environment
+	•	Get-Module / Install-Module – manage modules: Install-Module SqlServer -Scope CurrentUser
+	•	$env: – env vars: $env:Path, $env:ComputerName
+
+SQL Server (common in broker ops)
+	•	Invoke-Sqlcmd (SqlServer module):
+        Invoke-Sqlcmd -ServerInstance "APP01,1433" -Database "DB" `
+            -Query "SELECT TOP 10 * FROM dbo.Trades" -Username sa -Password '***'
+   	•	sqlcmd (CLI) from PS: sqlcmd -S APP01,1433 -Q "SELECT @@VERSION"
+Text/log workflows (streaming)
+	•	Tail & filter live logs:
+        Get-Content C:\Logs\app.log -Tail 200 -Wait |
+            Select-String 'ERROR|Exception' -SimpleMatch
+    •	Tee-Object – view and save:
+        Some-Command | Tee-Object .\out.txt
+Pipeline essentials (for combining everything)
+	•	Where-Object filter: ... | Where-Object Status -ne 'Running'
+	•	Select-Object project: ... | Select Name,CPU -First 10
+	•	Sort-Object order: ... | Sort-Object CPU -Desc
+
+Safety patterns (use in prod)
+	•	Dry run deletions: ... | Remove-Item -WhatIf
+	•	Confirm explicitly: -Confirm (or suppress with -Confirm:$false when scripted and safe)
+	•	Error handling: -ErrorAction Stop; try { ... } catch { ... }
+
+⸻

@@ -1,0 +1,86 @@
+Files & directories
+	•	ls -lAh — list with perms/sizes; ls -ltr (latest last)
+	•	cd /var/log && pwd — move/check path
+	•	cp -a src/ dst/ / mv / rm -rf dir — copy/move/delete
+	•	mkdir -p /opt/app/logs — create parents
+	•	find /var/log -type f -mtime +15 -delete — delete logs >15 days
+	•	du -sh /var/log/* | sort -h — who’s eating disk
+	•	sed -n '1,200p' file / awk '{print $1,$5}' file — quick parses
+Text & logs
+	•	tail -n 200 -f app.log — follow last 200 lines
+	•	grep -inE 'ERROR|Exception' app.log — case-insensitive, numbered
+	•	zgrep -n 'timeout' app.log.1.gz — search gz logs
+	•	journalctl -u app.service -S "2025-09-01 08:00" — unit logs since time
+	•	journalctl -xe — recent system errors
+Processes & performance
+	•	top / htop — live CPU/mem
+	•	ps -ef | grep -i app — find process
+	•	pstree -ap | less — process tree
+	•	lsof -p <PID> — open files/sockets
+	•	strace -p <PID> — syscalls (last resort)
+	•	kill -TERM <PID> / kill -9 <PID> — graceful vs hard kill
+	•	nice/renice — adjust CPU priority
+	•	vmstat 1 / iostat -xz 1 / dstat — CPU/mem/io hotspots
+Services & boot
+	•	systemctl status app.service — state & last logs
+	•	sudo systemctl restart app.service — restart
+	•	sudo systemctl enable app.service — start at boot
+	•	sudo systemctl list-units --type=service --failed — failed services
+Networking & connectivity
+	•	ping -c 4 host — basic reachability
+	•	traceroute host — path
+	•	curl -sS -I https://host:443/health — HTTP head & TLS
+	•	nc -vz host 1433 — TCP port check
+	•	ss -ltnp | grep :1433 — who’s listening on port
+	•	dig +short A host / nslookup host — DNS
+	•	tcpdump -ni any port 443 — packet peek (root)
+Disk & memory
+	•	df -h — filesystem usage
+	•	free -h — RAM/swap
+	•	mount | column -t — mounts
+	•	lsblk -f — devices & filesystems
+Users, permissions, sudo
+	•	id / whoami / who — identity/sessions
+	•	sudo -v — refresh sudo
+	•	chmod 640 file / chown app:app file — perms/ownership
+	•	getfacl/setfacl — ACLs when needed
+Packages & OS info
+	•	Debian/Ubuntu: sudo apt update && sudo apt install <pkg>
+	•	RHEL/CentOS: sudo yum install <pkg> / dnf
+	•	uname -a / lsb_release -a / cat /etc/os-release — OS details
+	•	hostnamectl — hostname/kernel
+Scheduling & background jobs
+	•	crontab -e / crontab -l — per-user cron
+	•	/etc/crontab / /etc/cron.d/* — system cron
+	•	at now + 5 minutes — one-off
+	•	nohup cmd & disown — survive logout
+	•	tmux / screen — persistent sessions
+Archives & transfer
+	•	tar -czf logs.tgz /var/log/app — create archive
+	•	tar -xzf logs.tgz -C /tmp — extract
+	•	scp file user@host:/path/ — copy over SSH
+	•	rsync -av --progress src/ dest/ — fast sync
+Security, firewall, TLS
+	•	Ubuntu: sudo ufw status / sudo ufw allow 443/tcp
+	•	RHEL: sudo firewall-cmd --list-ports
+	•	openssl s_client -connect host:443 -servername host </dev/null — TLS handshake
+	•	ss -tnp — list TCP with PIDs (check unexpected listeners)
+	•	SELinux/AppArmor quick check: getenforce / aa-status
+Databases & tools (common in support)
+	•	SQL Server client: sqlcmd -S host,1433 -U sa -P '***' -Q "SELECT @@VERSION"
+	•	Postgres: psql -h host -U user db -c "SELECT now();"
+	•	MySQL: mysql -h host -u user -p -e "SHOW DATABASES;"
+Containers / orchestration (if used)
+	•	docker ps / docker logs <ctr> --tail 200 -f
+	•	docker exec -it <ctr> sh — shell into container
+	•	kubectl get pods -n ns / kubectl logs pod -n ns -f
+Quick troubleshooting one-liners
+	•	Tail + grep live: tail -F /var/log/app/app.log | grep -Ei 'error|fail|timeout'
+	•	Find largest files: find /var -type f -printf '%s %p\n' 2>/dev/null | sort -nr | head -20
+	•	Who’s locking a file: lsof /path/file
+	•	Test FIX/port: nc -vz fix-gw 9876  (then ss -tanp | grep 9876 on server)
+
+Safety patterns
+	•	Dry runs: rm -rf → prefer -i or preview with find ... -print
+	•	Use sudo !! to re-run last command with sudo (Ubuntu)
+	•	Log captures: script -c 'cmd' out.typescript for reproducible runs
